@@ -1,0 +1,144 @@
+<?php
+
+namespace Framework\DB;
+
+use Framework\Config;
+use Framework\DB\Exception\DBException;
+use PDO;
+
+class DB {
+
+    const QUERY_TYPE_SELECT = 1;
+    const QUERY_TYPE_INSERT = 2;
+    const QUERY_TYPE_DELETE = 3;
+    const QUERY_TYPE_UPDATE = 4;
+    const QUERY_TYPE_OTHERS = 99;
+
+    private static $dbs;
+    private $pdo;
+    private $prefix;
+
+    /**
+     * @param $name
+     */
+
+    function __construct( $name = null ) {
+
+        if ( ! $name ) $name = 'default';
+        $prefix = "database." . $name;
+        if ( $name && ! Config::has($prefix) )
+            throw new DBException('No Setting Found');
+
+        if ( ( $host = Config::get($prefix . '.db') ) == null )
+            throw new DBException('No Host Specified');
+        if ( ( $dbname = Config::get($prefix . '.db')  )== null )
+            throw new DBException('No DB Specified');
+        if ( ( $user = Config::get($prefix . '.username')  )== null )
+            throw new DBException('No User Name Specified');
+        if ( ( $password = Config::get($prefix . '.password')  )== null )
+            throw new DBException('No Password Specified');
+
+        $driver = Config::get($prefix . '.driver', 'mysql');
+        $charset = Config::get($prefix . '.charset', 'utf8');
+
+        $this->pdo = new PDO(
+            "$driver:host=$host;dbname=$dbname;charset=$charset",
+            $user, $password);
+        $this->pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
+        self::$dbs[$name] = $this;
+        $this->prefix = $prefix;
+
+    }
+
+    /**
+     * @param null $name
+     * @return DB
+     */
+    static function connection( $name = null ) {
+        if ( isset( self::$dbs[$name] ) ) return self::$dbs[$name];
+        return new DB($name);
+    }
+
+    function query( ) {
+        if ( ! isset($this) )
+            return self::connection('default')->query(func_get_args());
+
+        $args = func_get_args();
+
+        if ( is_array($args[0]) ) {
+            $args = $args[0];
+        }
+
+        if ( ! isset($args[0]) ) throw new DBException('No SQL');
+
+        if ( preg_match("/^select/i", $args[0]) )
+            $query_type = self::QUERY_TYPE_SELECT;
+        else if ( preg_match("/^update/i", $args[0] ) )
+            $query_type = self::QUERY_TYPE_UPDATE;
+        else if ( preg_match("/^delete/i", $args) )
+            $query_type = self::QUERY_TYPE_DELETE;
+        else if ( preg_match("/^insert/i", $args[0]) )
+            $query_type = self::QUERY_TYPE_INSERT;
+        else $query_type = self::QUERY_TYPE_OTHERS;
+
+        if ( ( $query_type == self::QUERY_TYPE_DELETE
+            || $query_type == self::QUERY_TYPE_UPDATE
+            || $query_type == self::QUERY_TYPE_INSERT )
+            && ($c = Config::get($this->prefix . '.write', null) ) != null ) {
+
+            $this->pdo = self::connection($c)->getPdo();
+        }
+
+        $stmt = $this->pdo->prepare($args[0]);
+        $stmt->setFetchMode(PDO::FETCH_ASSOC);
+        if ( isset($args[1]) && is_array($args[1])) {
+            $params = $args[1];
+            reset($params);
+            list($k) = each($array);
+            if ( $k !== 0 ) {
+                foreach($params as $key=>$value) {
+                    $stmt->bindValue($key, $value);
+                }
+                //HashMap type binding
+            } else {
+                foreach($params as $key => $value ) {
+                    $stmt->bindValue($key+1, $value);
+                }
+            }
+        } else {
+            for ( $i = 1; $i < count($args); $i++ ) {
+                $stmt->bindValue($i, $args[$i]);
+            }
+        }
+        $stmt->execute();
+
+        switch( $query_type ) {
+            case self::QUERY_TYPE_SELECT:
+                return $stmt->fetchAll();
+            case self::QUERY_TYPE_INSERT:
+                return $this->pdo->lastInsertId();
+            case self::QUERY_TYPE_DELETE:
+            case self::QUERY_TYPE_UPDATE:
+                return $stmt->rowCount();
+            default: return true;
+        }
+    }
+
+    public function getPdo( ) {
+        return $this->pdo;
+    }
+    public function select( ) {
+        return $this->query( func_get_args() );
+    }
+    public function update( ) {
+        return $this->query( func_get_args() );
+    }
+    public function delete( ) {
+        return $this->query( func_get_args() );
+    }
+    public function insert( ) {
+        return $this->query( func_get_args() );
+    }
+
+
+} 
