@@ -63,7 +63,7 @@ class DB {
 
     function query( ) {
         if ( ! isset($this) )
-            return self::connection('default')->query(func_get_args());
+            return self::connection()->query(func_get_args());
 
         $args = func_get_args();
 
