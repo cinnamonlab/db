@@ -24,25 +24,27 @@ class DB {
 
     function __construct( $name = null ) {
 
-        if ( ! $name ) $name = 'default';
+        if ( ! $name ) $name = self::getDefault();
         $prefix = "database." . $name;
         if ( $name && ! Config::has($prefix) )
             throw new DBException('No Setting Found');
 
-        if ( ( $host = Config::get($prefix . '.db') ) == null )
+        if ( ( $host = Config::get($prefix . '.host') ) == null )
             throw new DBException('No Host Specified');
         if ( ( $dbname = Config::get($prefix . '.db')  )== null )
             throw new DBException('No DB Specified');
-        if ( ( $user = Config::get($prefix . '.username')  )== null )
+        if ( ( $user = Config::get($prefix . '.user')  )== null )
             throw new DBException('No User Name Specified');
-        if ( ( $password = Config::get($prefix . '.password')  )== null )
+        if ( ( $password = Config::get($prefix . '.pass')  )== null )
             throw new DBException('No Password Specified');
 
         $driver = Config::get($prefix . '.driver', 'mysql');
         $charset = Config::get($prefix . '.charset', 'utf8');
+        $port = Config::get($prefix . '.port', "");
+        if ( strlen($port) > 0 ) $port = ":" . $port;
 
         $this->pdo = new PDO(
-            "$driver:host=$host;dbname=$dbname;charset=$charset",
+            "$driver:host=$host$port;dbname=$dbname;charset=$charset",
             $user, $password);
         $this->pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
         self::$dbs[$name] = $this;
@@ -51,7 +53,7 @@ class DB {
     }
 
     /**
-     * @param null $name
+     * @param $name
      * @return DB
      */
     static function connection( $name = null ) {
@@ -140,5 +142,12 @@ class DB {
         return $this->query( func_get_args() );
     }
 
+    private function getDefault( ) {
+        $name = Config::get('database.default', null);
+        if ( is_string($name) ) {
+            return $name;
+        }
+        return "default";
+    }
 
 } 
