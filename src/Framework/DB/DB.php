@@ -47,6 +47,7 @@ class DB {
             "$driver:host=$host$port;dbname=$dbname;charset=$charset",
             $user, $password);
         $this->pdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
+        $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         self::$dbs[$name] = $this;
         $this->prefix = $prefix;
 
