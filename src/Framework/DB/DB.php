@@ -97,7 +97,7 @@ class DB {
         if ( isset($args[1]) && is_array($args[1])) {
             $params = $args[1];
             reset($params);
-            list($k) = each($array);
+            list($k) = each($params);
             if ( $k !== 0 ) {
                 foreach($params as $key=>$value) {
                     $stmt->bindValue($key, $value);
