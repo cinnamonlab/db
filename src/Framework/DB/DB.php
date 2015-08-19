@@ -113,7 +113,7 @@ class DB {
         } else {
             for ( $i = 1; $i < count($args); $i++ ) {
                 if ( is_numeric($args[$i]) ) $mode = PDO::PARAM_INT; else $mode=PDO::PARAM_STR;
-                $stmt->bindValue($i, $args[$i]);
+                $stmt->bindValue($i, $args[$i], $mode);
             }
         }
         $stmt->execute();
