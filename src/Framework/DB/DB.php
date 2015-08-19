@@ -100,16 +100,19 @@ class DB {
             list($k) = each($params);
             if ( $k !== 0 ) {
                 foreach($params as $key=>$value) {
-                    $stmt->bindValue($key, $value);
+                    if ( is_numeric($value) ) $mode = PDO::PARAM_INT; else $mode=PDO::PARAM_STR;
+                    $stmt->bindValue($key, $value, $mode);
                 }
                 //HashMap type binding
             } else {
                 foreach($params as $key => $value ) {
-                    $stmt->bindValue($key+1, $value);
+                    if ( is_numeric($value) ) $mode = PDO::PARAM_INT; else $mode=PDO::PARAM_STR;
+                    $stmt->bindValue($key+1, $value, $mode);
                 }
             }
         } else {
             for ( $i = 1; $i < count($args); $i++ ) {
+                if ( is_numeric($args[$i]) ) $mode = PDO::PARAM_INT; else $mode=PDO::PARAM_STR;
                 $stmt->bindValue($i, $args[$i]);
             }
         }
