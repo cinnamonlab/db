@@ -116,8 +116,11 @@ class DB {
                 $stmt->bindValue($i, $args[$i], $mode);
             }
         }
-        $stmt->execute();
-
+        try {
+            $stmt->execute();
+        } catch ( \Exception $e ) {
+            throw new DBException($e);
+        }
         switch( $query_type ) {
             case self::QUERY_TYPE_SELECT:
                 return $stmt->fetchAll();
