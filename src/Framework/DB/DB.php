@@ -18,11 +18,14 @@ class DB {
     private $pdo;
     private $prefix;
 
+    private $now;
+
     /**
      * @param $name
      */
 
     function __construct( $name = null ) {
+        if ( ! $this->now ) $this->now = microtime(true);
 
         if ( ! $name ) $name = self::getDefault();
         $prefix = "database." . $name;
@@ -58,8 +61,8 @@ class DB {
      * @return DB
      */
     static function connection( $name = null ) {
-        if ( isset( self::$dbs[$name] ) ) return self::$dbs[$name];
-        return new DB($name);
+        if ( ! isset( self::$dbs[$name] ) ) self::$dbs[$name] = new DB($name);
+        return self::$dbs[$name];
     }
 
     function query( ) {
@@ -117,7 +120,10 @@ class DB {
             }
         }
         try {
+            $now = microtime(true);
             $stmt->execute();
+//          echo  ceil((microtime(true)-$now)*100000)/100 . "msec: {$args[0]}<br />\n";
+//          echo  ceil((microtime(true)-$this->now)*100000)/100 . "msec: {$args[0]}<br />\n";
         } catch ( \Exception $e ) {
             throw new DBException($e);
         }
