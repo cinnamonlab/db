@@ -21,7 +21,7 @@ class DB {
     private $log = array();
 
     /**
-     * Query Logs 
+     * Query Logs
      *
      * @return array
      */
