@@ -18,14 +18,24 @@ class DB {
     private $pdo;
     private $prefix;
 
-    private $now;
+    private $log = array();
+
+    /**
+     * Query Logs 
+     *
+     * @return array
+     */
+    public function getLog()
+    {
+        return $this->log;
+    }
+
 
     /**
      * @param $name
      */
 
     function __construct( $name = null ) {
-        if ( ! $this->now ) $this->now = microtime(true);
 
         if ( ! $name ) $name = self::getDefault();
         $prefix = "database." . $name;
@@ -122,8 +132,8 @@ class DB {
         try {
             $now = microtime(true);
             $stmt->execute();
-//          echo  ceil((microtime(true)-$now)*100000)/100 . "msec: {$args[0]}<br />\n";
-//          echo  ceil((microtime(true)-$this->now)*100000)/100 . "msec: {$args[0]}<br />\n";
+            array_push($this->log, array($args[0], ceil((microtime(true)-$now)*100000)/100));
+
         } catch ( \Exception $e ) {
             throw new DBException($e);
         }
