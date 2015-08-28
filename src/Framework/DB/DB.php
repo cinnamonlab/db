@@ -91,7 +91,7 @@ class DB {
             $query_type = self::QUERY_TYPE_SELECT;
         else if ( preg_match("/^update/i", $args[0] ) )
             $query_type = self::QUERY_TYPE_UPDATE;
-        else if ( preg_match("/^delete/i", $args) )
+        else if ( preg_match("/^delete/i", $args[0]) )
             $query_type = self::QUERY_TYPE_DELETE;
         else if ( preg_match("/^insert/i", $args[0]) )
             $query_type = self::QUERY_TYPE_INSERT;
