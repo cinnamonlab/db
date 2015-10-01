@@ -42,13 +42,20 @@ class DB {
         if ( $name && ! Config::has($prefix) )
             throw new DBException('No Setting Found');
 
-        if ( ( $host = Config::get($prefix . '.host') ) == null )
+        $host = Config::get($prefix . '.host');
+        if ( !isset($host) )
             throw new DBException('No Host Specified');
-        if ( ( $dbname = Config::get($prefix . '.db')  )== null )
+
+        $dbname = Config::get($prefix . '.db');
+        if (!isset($dbname))
             throw new DBException('No DB Specified');
-        if ( ( $user = Config::get($prefix . '.user')  )== null )
+
+        $user = Config::get($prefix . '.user');
+        if (!isset($user))
             throw new DBException('No User Name Specified');
-        if ( ( $password = Config::get($prefix . '.pass')  )== null )
+
+        $password = Config::get($prefix . '.pass');
+        if (!isset($password))
             throw new DBException('No Password Specified');
 
         $driver = Config::get($prefix . '.driver', 'mysql');
