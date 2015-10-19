@@ -84,9 +84,8 @@ class DB {
         return self::$dbs[$name];
     }
 
-    private function query($query_type,$sqlStatement,$params )
+    public function query($sqlStatement,$params=array(),$query_type=self::QUERY_TYPE_OTHERS )
     {
-
         if (!isset($sqlStatement)) throw new DBException('No SQL');
 
         if (($query_type == self::QUERY_TYPE_DELETE
@@ -160,16 +159,16 @@ class DB {
         return $this->pdo;
     }
     public function select($sqlQuery,$param=array()) {
-        return $this->query(self::QUERY_TYPE_SELECT,$sqlQuery,$param);
+        return $this->query($sqlQuery,$param,self::QUERY_TYPE_SELECT);
     }
     public function update($sqlQuery,$param=array() ) {
-        return $this->query(self::QUERY_TYPE_UPDATE,$sqlQuery,$param);
+        return $this->query($sqlQuery,$param,self::QUERY_TYPE_UPDATE);
     }
     public function delete($sqlQuery,$param=array() ) {
-        return $this->query(self::QUERY_TYPE_DELETE,$sqlQuery,$param);
+        return $this->query($sqlQuery,$param,self::QUERY_TYPE_DELETE);
     }
     public function insert($sqlQuery,$param=array() ) {
-        return $this->query(self::QUERY_TYPE_INSERT,$sqlQuery,$param);
+        return $this->query($sqlQuery,$param,self::QUERY_TYPE_INSERT);
     }
 
     private function getDefault( ) {
