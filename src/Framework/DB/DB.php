@@ -20,6 +20,8 @@ class DB {
 
     private $log = array();
 
+    private $fetchMode=PDO::FETCH_ASSOC;
+
     /**
      * Query Logs
      *
@@ -82,69 +84,52 @@ class DB {
         return self::$dbs[$name];
     }
 
-    function query( ) {
-        if ( ! isset($this) )
-            return self::connection()->query(func_get_args());
+    private function query($query_type,$sqlStatement,$params )
+    {
 
-        $args = func_get_args();
+        if (!isset($sqlStatement)) throw new DBException('No SQL');
 
-        if ( is_array($args[0]) ) {
-            $args = $args[0];
-        }
-
-        if ( ! isset($args[0]) ) throw new DBException('No SQL');
-
-        if ( preg_match("/^select/i", $args[0]) )
-            $query_type = self::QUERY_TYPE_SELECT;
-        else if ( preg_match("/^update/i", $args[0] ) )
-            $query_type = self::QUERY_TYPE_UPDATE;
-        else if ( preg_match("/^delete/i", $args[0]) )
-            $query_type = self::QUERY_TYPE_DELETE;
-        else if ( preg_match("/^insert/i", $args[0]) )
-            $query_type = self::QUERY_TYPE_INSERT;
-        else $query_type = self::QUERY_TYPE_OTHERS;
-
-        if ( ( $query_type == self::QUERY_TYPE_DELETE
-            || $query_type == self::QUERY_TYPE_UPDATE
-            || $query_type == self::QUERY_TYPE_INSERT )
-            && ($c = Config::get($this->prefix . '.write', null) ) != null ) {
+        if (($query_type == self::QUERY_TYPE_DELETE
+                || $query_type == self::QUERY_TYPE_UPDATE
+                || $query_type == self::QUERY_TYPE_INSERT)
+            && ($c = Config::get($this->prefix . '.write', null)) != null
+        ) {
 
             $this->pdo = self::connection($c)->getPdo();
         }
 
-        $stmt = $this->pdo->prepare($args[0]);
-        $stmt->setFetchMode(PDO::FETCH_ASSOC);
-        if ( isset($args[1]) && is_array($args[1])) {
-            $params = $args[1];
-            reset($params);
-            list($k) = each($params);
-            if ( $k !== 0 ) {
-                foreach($params as $key=>$value) {
-                    if ( is_numeric($value) ) $mode = PDO::PARAM_INT; else $mode=PDO::PARAM_STR;
-                    $stmt->bindValue($key, $value, $mode);
-                }
-                //HashMap type binding
-            } else {
-                foreach($params as $key => $value ) {
-                    if ( is_numeric($value) ) $mode = PDO::PARAM_INT; else $mode=PDO::PARAM_STR;
-                    $stmt->bindValue($key+1, $value, $mode);
-                }
+        $stmt = $this->pdo->prepare($sqlStatement);
+        $stmt->setFetchMode($this->fetchMode);
+        if (!isset($params)) {
+            $params = array();
+        }
+        if (!is_array($params)) $params = array($params);
+
+        reset($params);
+        list($k) = each($params);
+
+        if ($k !== 0) {
+            foreach ($params as $key => $value) {
+                $mode = $this->getParamType($value);
+                $stmt->bindValue($key, $value, $mode);
             }
+            //HashMap type binding
         } else {
-            for ( $i = 1; $i < count($args); $i++ ) {
-                if ( is_numeric($args[$i]) ) $mode = PDO::PARAM_INT; else $mode=PDO::PARAM_STR;
-                $stmt->bindValue($i, $args[$i], $mode);
+            foreach ($params as $key => $value) {
+                $mode = $this->getParamType($value);
+                $stmt->bindValue($key + 1, $value, $mode);
             }
         }
+
         try {
             $now = microtime(true);
             $stmt->execute();
-            array_push($this->log, array($args[0], ceil((microtime(true)-$now)*100000)/100));
+            array_push($this->log, array($sqlStatement, ceil((microtime(true) - $now) * 100000) / 100));
 
-        } catch ( \Exception $e ) {
+        } catch (\Exception $e) {
             throw new DBException($e);
         }
-        switch( $query_type ) {
+        switch ($query_type) {
             case self::QUERY_TYPE_SELECT:
                 return $stmt->fetchAll();
             case self::QUERY_TYPE_INSERT:
@@ -152,24 +137,39 @@ class DB {
             case self::QUERY_TYPE_DELETE:
             case self::QUERY_TYPE_UPDATE:
                 return $stmt->rowCount();
-            default: return true;
+            default:
+                return true;
+        }
+    }
+
+    private function getParamType($param) {
+        if(is_numeric($param)) {
+            return PDO::PARAM_INT;
+        } elseif(is_bool($param)) {
+            return PDO::PARAM_BOOL;
+        } elseif(is_string($param)) {
+            return PDO::PARAM_STR;
+        } elseif(is_null($param)) {
+            return PDO::PARAM_NULL;
+        } else {
+            return PDO::PARAM_STR;
         }
     }
 
     public function getPdo( ) {
         return $this->pdo;
     }
-    public function select( ) {
-        return $this->query( func_get_args() );
+    public function select($sqlQuery,$param=array()) {
+        return $this->query(self::QUERY_TYPE_SELECT,$sqlQuery,$param);
     }
-    public function update( ) {
-        return $this->query( func_get_args() );
+    public function update($sqlQuery,$param=array() ) {
+        return $this->query(self::QUERY_TYPE_UPDATE,$sqlQuery,$param);
     }
-    public function delete( ) {
-        return $this->query( func_get_args() );
+    public function delete($sqlQuery,$param=array() ) {
+        return $this->query(self::QUERY_TYPE_DELETE,$sqlQuery,$param);
     }
-    public function insert( ) {
-        return $this->query( func_get_args() );
+    public function insert($sqlQuery,$param=array() ) {
+        return $this->query(self::QUERY_TYPE_INSERT,$sqlQuery,$param);
     }
 
     private function getDefault( ) {
@@ -178,6 +178,10 @@ class DB {
             return $name;
         }
         return "default";
+    }
+
+    public function setFetchMode($mode) {
+        $this->fetchMode = $mode;
     }
 
 } 

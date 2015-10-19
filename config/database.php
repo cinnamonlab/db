@@ -6,9 +6,9 @@ return array(
     "read" => array(
         "driver"    => "mysql",
         "host"      => "localhost",
-        "db"        => "cinnamon",
-        "user"      => "user",
-        "pass"      => "pass",
+        "db"        => "test",
+        "user"      => "root",
+        "pass"      => "",
         "port"      => 3306,
         'write'     => "write"
     ),
@@ -16,9 +16,9 @@ return array(
     "write" => array(
         "driver"    => "mysql",
         "host"      => "localhost",
-        "db"        => "cinnamon",
-        "user"      => "user",
-        "pass"      => "pass",
+        "db"        => "test",
+        "user"      => "root",
+        "pass"      => "",
         "port"      => 3306
     ),
 
