@@ -1,10 +1,4 @@
 <?php
-date_default_timezone_set("UTC");
-define('__APP__', __DIR__ . '/..');
-try {
-    require __APP__ . '/vendor/autoload.php';
-} catch (\Framework\Exception\FrameworkException $e) {
-}
 
 use Framework\DB\DB;
 
@@ -36,10 +30,13 @@ class DBUpdateTest extends PHPUnit_Framework_TestCase
         $this->assertTrue($result>0);
     }
     public function testUpdateMultipleLines() {
+        $id = $this->db->insert("insert into test(name,age,adress,is_active,created_at) VALUE (?,?,?,?,now());",
+            array("ssss","22","ddsdsd","1"));
+
         $result = $this->db->update("
         update test
         set name=?,age=? where id=?;",
-            array("dddd","2222",1));
+            array("dddd","2222",$id));
 
         $this->assertTrue($result>0);
     }

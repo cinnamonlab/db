@@ -1,13 +1,6 @@
 <?php
 
 
-define('__APP__', __DIR__ . '/..');
-date_default_timezone_set("UTC");
-try {
-    require __APP__ . '/vendor/autoload.php';
-} catch (\Framework\Exception\FrameworkException $e) {
-}
-
 use Framework\DB\DB;
 
 /**

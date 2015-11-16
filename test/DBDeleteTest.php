@@ -1,10 +1,4 @@
 <?php
-date_default_timezone_set("UTC");
-define('__APP__', __DIR__ . '/..');
-try {
-    require __APP__ . '/vendor/autoload.php';
-} catch (\Framework\Exception\FrameworkException $e) {
-}
 use Framework\DB\DB;
 
 /**
@@ -29,16 +23,23 @@ class DBDeleteTest extends PHPUnit_Framework_TestCase
 
 
     public function testDelete() {
+
+        $id = $this->db->insert("insert into test(name,age,adress,is_active,created_at) VALUE (?,?,?,?,now());",
+            array("ssss","22","ddsdsd","1"));
+
         $result = $this->db->delete("delete from test where id=?;",
-            array(1));
+            array($id));
 
         $this->assertTrue($result>0);
     }
     public function testDeleteMultipleLines() {
+        $id = $this->db->insert("insert into test(name,age,adress,is_active,created_at) VALUE (?,?,?,?,now());",
+            array("ssss","22","ddsdsd","1"));
+
         $result = $this->db->delete("
         delete from test
         where id=?;",
-            array(2));
+            array($id));
 
         $this->assertTrue($result>0);
     }

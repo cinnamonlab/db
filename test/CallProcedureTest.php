@@ -2,14 +2,6 @@
 
 use Framework\DB\DB;
 
-date_default_timezone_set("UTC");
-define('__APP__', __DIR__ . '/..');
-try {
-    require __APP__ . '/vendor/autoload.php';
-} catch (\Framework\Exception\FrameworkException $e) {
-}
-
-
 /**
  * Created by PhpStorm.
  * User: michael

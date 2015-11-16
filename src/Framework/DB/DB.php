@@ -98,7 +98,7 @@ class DB {
         }
 
         $stmt = $this->pdo->prepare($sqlStatement);
-        $stmt->setFetchMode($this->fetchMode);
+
         if (!isset($params)) {
             $params = array();
         }
@@ -130,6 +130,7 @@ class DB {
         }
         switch ($query_type) {
             case self::QUERY_TYPE_SELECT:
+                $stmt->setFetchMode($this->fetchMode);
                 return $stmt->fetchAll();
             case self::QUERY_TYPE_INSERT:
                 return $this->pdo->lastInsertId();
